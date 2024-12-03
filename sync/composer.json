@@ -34,7 +34,8 @@
         "pimple/pimple": "^3.3",
         "react/child-process": "^0.5.2",
         "react/event-loop": "@dev",
-        "symfony/event-dispatcher": "^3.4"
+        "symfony/event-dispatcher": "^3.4",
+        "php-kit/ext-pdo": "^1.1"
     },
     "suggest": {
         "ext-mysqlnd": "MySQL Native Driver",
