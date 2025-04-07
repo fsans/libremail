@@ -279,8 +279,9 @@ class Daemon
         $this->processPids = [];
     }
 
-    private function processMessage(string $message, string $process)
+    protected function processMessage(string $message, ?string $key = null)
     {
+        $process = $key; // Use the key parameter as the process
         if (! ($parsed = $this->parseMessage($message, $process))) {
             return;
         }
@@ -299,8 +300,9 @@ class Daemon
      * The message expects certain fields to be set depending on
      * the type.
      */
-    private function handleMessage(string $json, string $process)
+    protected function handleMessage(string $json, ?string $key = null)
     {
+        $process = $key; // Use the key parameter as the process
         if (! Message::isValid($json)) {
             $this->log->addNotice("Invalid message sent to Daemon: $json");
 

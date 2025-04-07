@@ -205,7 +205,14 @@ $di['db_factory'] = $di->factory(function ($container, $config = null) {
         $db = new Database(
             $dsn,
             $dbConfig['username'],
-            $dbConfig['password']
+            $dbConfig['password'],
+            [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+                \PDO::MYSQL_ATTR_SSL_CA => false,
+                \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false
+            ]
         );
         $db->query('SET SESSION wait_timeout = 28800;');
         $db->query('SET NAMES '.$dbConfig['charset'].';');

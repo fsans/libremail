@@ -125,7 +125,7 @@ class StatsServer implements MessageComponentInterface
         $this->write = new WritableResourceStream(STDOUT, $this->loop);
     }
 
-    private function processMessage(string $message, string $key = null)
+    protected function processMessage(string $message, ?string $key = null)
     {
         if (! $this->write
             || ! ($parsed = $this->parseMessage($message))
@@ -169,7 +169,7 @@ class StatsServer implements MessageComponentInterface
         }
     }
 
-    private function handleMessage(string $json, string $key)
+    protected function handleMessage(string $json, ?string $key = null)
     {
         $this->broadcast($json);
     }

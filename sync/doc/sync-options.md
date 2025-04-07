@@ -1,4 +1,4 @@
-## Sync Options
+# Sync Options
 
 Before you begin, you can run `./sync --help` to see a list of what options you
 have. Below is an explanation of the options you can specify when running this
