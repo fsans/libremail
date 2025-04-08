@@ -1,14 +1,18 @@
+# LibreMail Configuration
+
 ## Configuration Options
 
 Here are the configuration options you can overwrite in `config/local.ini`. Please follow the same format; your configuration file would look like this:
 
-```
+```ini
 [app]
 
 memory="512M"
 ```
 
 If you just wanted to increase the memory of your application. This is a good idea if you have large file attachments.
+
+### Application Settings
 
 #### [app]
 
@@ -38,6 +42,8 @@ If you just wanted to increase the memory of your application. This is a good id
   Integer, defaults to `15`. This is the number of minutes the script will
   sleep after each sync attempt, before running the next.
 
+### Log Settings
+
 #### [log]
 
 * `level[cli]`
@@ -47,14 +53,16 @@ the minimum level you want to capture when logs are written to the CLI. This
 happens when the app is run in `interactive mode`. These are the following log
 levels:
 
-        0: Emergency -- system is unusable
-        1: Alert -- action must be taken immediately
-        2: Critical -- severe error
-        3: Error -- standard error
-        4: Warning -- something unusual happened
-        5: Notice -- normal but significant condition
-        6: Info -- informational messages
-        7: Debug -- noisy, debug-level messages
+```markdown
+0: Emergency -- system is unusable
+1: Alert -- action must be taken immediately
+2: Critical -- severe error
+3: Error -- standard error
+4: Warning -- something unusual happened
+5: Notice -- normal but significant condition
+6: Info -- informational messages
+7: Debug -- noisy, debug-level messages
+```
 
 * `level[file]`
 
@@ -72,6 +80,8 @@ happens when the app is running in the background.
   Relative or absolute path for saving log files. This needs a filename at the
   end which will be used as a stem for creating timestamped log files. Default
   value is `logs/sync.log`.
+
+### SQL Settings
 
 #### [sql]
 
@@ -101,12 +111,16 @@ happens when the app is running in the background.
 
   Character set for MySQL connection, defaults to `utf8`.
 
+### Email Settings
+
 #### [email]
 
 * `attachments[path]`
 
   Relative or absolute path for saving email attachments. Defaults to a local
 directory named `attachments`.
+
+### Daemon Log Settings
 
 #### [daemonlog]
 
@@ -128,6 +142,8 @@ directory named `attachments`.
 
   Defaults to `logs/daemon.log`. See the `[log]` section above for more
   info.
+
+### Server Settings
 
 #### [server]
 
@@ -151,6 +167,8 @@ directory named `attachments`.
   127.0.0.1 (localhost) only, '0.0.0.0' for any machine on the network.
   Be careful when updating this, as it could expose your server in
   unintended ways.
+
+### Server Log Settings
 
 #### [serverlog]
 

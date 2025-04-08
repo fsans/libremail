@@ -1,15 +1,15 @@
-### CAVE CANEM
+# CAVE CANEM
 
 This is under active development but very close to being done! Read below if
 you want to check it out :D
 
 I'll soon be using this as my daily driver, which should shore up a lot of bugs.
 
-#### Web Client Interface
+## Web Client Interface
 
 ![Webmail Client Screenshot](http://mikegioia.github.io/libremail/images/webmail_screenshot.png)
 
-#### Status
+## Status
 
  - [x] ~Inbox and folder message display~
  - [x] ~Message thread view~
@@ -21,7 +21,7 @@ I'll soon be using this as my daily driver, which should shore up a lot of bugs.
  - [ ] Compose new message *[Started]*
  - [ ] Reply to and forward messages *[Started]*
 
-#### Installation (Developers only)
+## Installation (Developers only)
 
 1. Copy `config/nginx.conf` to your nginx config directory. Make sure
    to update the `root` directive to point to the `www` folder. Update
@@ -31,7 +31,7 @@ I'll soon be using this as my daily driver, which should shore up a lot of bugs.
 
 This application is set to run over localhost on port 9899 by default.
 
-#### Software Licenses
+## Software Licenses
 
 The Web Client includes the following 3rd party packages:
 
