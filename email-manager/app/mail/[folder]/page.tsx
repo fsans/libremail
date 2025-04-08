@@ -1,21 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { MailList } from '@/components/mail/mail-list';
 import type { Message, Folder } from '@/lib/db/schema';
 
 export default function FolderPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const folderName = params.folder as string;
   
+  // Get account ID from URL query parameter or use default
+  const accountIdParam = searchParams.get('accountId');
+  const accountId = accountIdParam ? Number(accountIdParam) : 1;
+  
   const [loading, setLoading] = useState(true);
-  //const [setFolders] = useState<Folder[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
-  
-  // For now, we'll use a hardcoded account ID
-  const accountId = 1;
   
   useEffect(() => {
     async function loadFolders() {
@@ -45,7 +46,7 @@ export default function FolderPage() {
       
       setLoading(true);
       try {
-        const response = await fetch(`/api/emails?folderId=${currentFolder.id}`);
+        const response = await fetch(`/api/emails?folderId=${currentFolder.id}&accountId=${accountId}`);
         const data = await response.json();
         setMessages(data);
       } catch (error) {
@@ -56,7 +57,7 @@ export default function FolderPage() {
     }
     
     loadMessages();
-  }, [currentFolder]);
+  }, [currentFolder, accountId]);
   
   if (loading) {
     return (

@@ -34,7 +34,7 @@ npm install
 
 4. Create a `.env.local` file with your database configuration:
 
-```
+```env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
