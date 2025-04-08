@@ -24,7 +24,7 @@ If you just wanted to increase the memory of your application. This is a good id
 
 * `db[sleep_minutes]`
 
-  Integer, defaults to `10`. This is the number of monutes the script will
+  Integer, defaults to `10`. This is the number of minutes the script will
   sleep after a non-recoverable database error is encountered, before
   starting back up again.
 

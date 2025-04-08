@@ -29,12 +29,30 @@ class Folder extends Model
 
     public const DRAFTS = [
         '[Gmail]/Drafts',
-        '[Gmail]/Bozze'
+        '[Gmail]/Bozze',
+        'INBOX.Drafts',
+        'Drafts',
+        'Draft',
+        'Entwürfe',           // German
+        'Borradores',         // Spanish
+        'Brouillons',         // French
+        'Bozze',              // Italian
+        'Черновики'           // Russian
     ];
 
     public const SENT = [
         '[Gmail]/Sent Mail',
-        '[Gmail]/Posta inviata'
+        '[Gmail]/Posta inviata',
+        'INBOX.Sent',
+        'Sent',
+        'Sent Items',
+        'Sent Messages',
+        'Enviados',           // Spanish
+        'Enviado',            // Portuguese
+        'Gesendet',           // German
+        'Envoyés',            // French
+        'Inviati',            // Italian
+        'Отправленные'        // Russian
     ];
 
     public function getData()
@@ -86,12 +104,30 @@ class Folder extends Model
 
     public function isDrafts()
     {
-        return in_array($this->getName(), self::DRAFTS);
+        // Check exact matches first
+        if (in_array($this->getName(), self::DRAFTS)) {
+            return true;
+        }
+        
+        // Check for common drafts folder naming patterns
+        $name = strtolower($this->getName());
+        return strpos($name, '.drafts') !== false || 
+               strpos($name, '/drafts') !== false ||
+               $name === 'drafts';
     }
 
     public function isSent()
     {
-        return in_array($this->getName(), self::SENT);
+         // Check exact matches first
+        if (in_array($this->getName(), self::SENT)) {
+            return true;
+        }
+        
+        // Check for common sent folder naming patterns
+        $name = strtolower($this->getName());
+        return strpos($name, '.sent') !== false || 
+               strpos($name, '/sent') !== false ||
+               $name === 'sent';
     }
 
     /**
