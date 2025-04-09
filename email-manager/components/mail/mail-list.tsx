@@ -1,43 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { RefreshCw, Filter, MessageSquare } from 'lucide-react';
 import { formatEmailDate } from '@/lib/utils/date-formatter';
 import { parseEmailAddresses } from '@/lib/utils/email-parser';
 import type { Message } from '@/lib/db/schema';
+import { useMailContext } from '@/app/mail/layout';
 
 interface MailListProps {
   messages: Message[];
   currentFolder: string;
-  onSelectMessage?: (id: number) => void;
 }
 
-export function MailList({ messages, currentFolder, onSelectMessage }: MailListProps) {
+export function MailList({ messages, currentFolder }: MailListProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const { setSelectedMessageId, setCurrentFolder } = useMailContext();
+  
+  // Update the current folder in the context when it changes
+  useEffect(() => {
+    setCurrentFolder(currentFolder);
+  }, [currentFolder, setCurrentFolder]);
   
   const handleSelectMessage = (id: number) => {
     setSelectedId(id);
-    if (onSelectMessage) {
-      onSelectMessage(id);
-    }
+    setSelectedMessageId(id);
   };
   
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h2 className="text-xl font-semibold capitalize">{currentFolder}</h2>
-        <div className="flex space-x-2">
-          <button className="p-2 rounded hover:bg-gray-100" title="Refresh">
-            <RefreshCw className="h-4 w-4 text-gray-600" />
-          </button>
-          <button className="p-2 rounded hover:bg-gray-100" title="Filter messages">
-            <Filter className="h-4 w-4 text-gray-600" />
-          </button>
-          <button className="p-2 rounded hover:bg-gray-100" title="Toggle conversation threads">
-            <MessageSquare className="h-4 w-4 text-gray-600" />
-          </button>
-        </div>
-      </div>
-      
       <div className="flex-1 overflow-auto">
         {messages.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -65,12 +53,12 @@ export function MailList({ messages, currentFolder, onSelectMessage }: MailListP
                     className="block px-4 py-3"
                   >
                     <div className="flex justify-between">
-                      <span className="text-sm">{fromName}</span>
+                      <span className="text-xs">{fromName}</span>
                       <span className="text-xs text-gray-500">
                         {formatEmailDate(message.date || new Date())}
                       </span>
                     </div>
-                    <div className="text-sm truncate">{message.subject}</div>
+                    <div className="text-xs truncate">{message.subject}</div>
                   </Link>
                 </li>
               );

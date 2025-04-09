@@ -3,9 +3,10 @@ import { format, formatDistanceToNow, isToday, isYesterday, isThisYear } from 'd
 /**
  * Format a date for email display
  * @param date Date to format
+ * @param showTime Optional parameter to show time with the date
  * @returns Formatted date string
  */
-export function formatEmailDate(date: Date | string | number): string {
+export function formatEmailDate(date: Date | string | number, showTime: boolean = false): string {
   const dateObj = new Date(date);
   
   if (isToday(dateObj)) {
@@ -13,14 +14,14 @@ export function formatEmailDate(date: Date | string | number): string {
   }
   
   if (isYesterday(dateObj)) {
-    return 'Yesterday';
+    return showTime ? `Yesterday, ${format(dateObj, 'p')}` : 'Yesterday';
   }
   
   if (isThisYear(dateObj)) {
-    return format(dateObj, 'MMM d'); // Jan 1
+    return showTime ? format(dateObj, 'MMM d, p') : format(dateObj, 'MMM d'); // Jan 1, 12:00 PM or Jan 1
   }
   
-  return format(dateObj, 'MMM d, yyyy'); // Jan 1, 2023
+  return showTime ? format(dateObj, 'MMM d, yyyy, p') : format(dateObj, 'MMM d, yyyy'); // Jan 1, 2023, 12:00 PM or Jan 1, 2023
 }
 
 /**

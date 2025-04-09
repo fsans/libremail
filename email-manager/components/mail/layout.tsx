@@ -98,16 +98,6 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
           />
         </div>
         
-        <div className="p-4">
-          <Link 
-            href="/mail/compose" 
-            className="flex items-center justify-center w-full py-2 px-4 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Compose
-          </Link>
-        </div>
-        
         <nav className="flex-1 overflow-auto p-2">
           {loading ? (
             <div className="text-center p-4 text-gray-500 dark:text-gray-400">Loading folders...</div>
