@@ -19,15 +19,18 @@ export function AccountSwitcher({ selectedAccountId, onAccountChange }: AccountS
       try {
         const response = await fetch('/api/accounts');
         const data = await response.json();
-        setAccounts(data);
+        
+        // Ensure data is an array before using array methods
+        const accountsArray = Array.isArray(data) ? data : [];
+        setAccounts(accountsArray);
         
         // Set the selected account
-        const account = data.find((a: Account) => a.id === selectedAccountId);
+        const account = accountsArray.find((a: Account) => a.id === selectedAccountId);
         if (account) {
           setSelectedAccount(account);
-        } else if (data.length > 0) {
-          setSelectedAccount(data[0]);
-          onAccountChange(data[0].id);
+        } else if (accountsArray.length > 0) {
+          setSelectedAccount(accountsArray[0]);
+          onAccountChange(accountsArray[0].id);
         }
       } catch (error) {
         console.error('Error loading accounts:', error);

@@ -1001,17 +1001,119 @@ class Message extends Model
      */
     private function formatAttachments(array $attachments)
     {
-        if (! is_array($attachments)) {
+        if (!is_array($attachments)) {
             return '';
         }
-
+    
         $formatted = [];
-
+    
         foreach ($attachments as $attachment) {
-            $formatted[] = $attachment->toArray();
+            $attachmentData = $attachment->toArray();
+            $formatted[] = $attachmentData;
+            
+            // Only insert into attachments table if the message has been saved
+            if ($this->id) {
+                $this->saveAttachment($attachmentData);
+            }
         }
-
+    
         return json_encode($formatted, JSON_UNESCAPED_SLASHES);
+    }
+    
+    private function saveAttachment(array $attachmentData)
+    {
+        try {
+            // For existing data, set origName and origFilename to filename if they don't exist
+            $filename = $attachmentData['filename'] ?? '';
+            $origName = $attachmentData['origName'] ?? $attachmentData['name'] ?? $filename;
+            $origFilename = $attachmentData['origFilename'] ?? $filename;
+            
+            // Generate a filepath similar to the format in the example
+            // Format: YYYY/MM/DD_[random-id]_filename
+            $filepath = '';
+            if (!empty($filename)) {
+                $date = date('Y/m/d');
+                $randomId = md5(uniqid($this->id . '_' . $filename, true));
+                $filepath = $date . '_' . $randomId . '_' . $filename;
+            }
+            
+            // Save the actual file content if available
+            if (!empty($attachmentData['content']) && !empty($filepath)) {
+                $this->saveAttachmentFile($attachmentData['content'], $filepath);
+            }
+            
+            $this->db()
+                ->insert([
+                    'message_id',
+                    'filename',
+                    'origName',
+                    'origFilename',
+                    'filepath',
+                    'mime_type',
+                    'size',
+                    'content_id',
+                    'disposition',
+                    'created_at'
+                ])
+                ->into('attachments')
+                ->values([
+                    $this->id,
+                    $filename,
+                    $origName,
+                    $origFilename,
+                    $filepath,
+                    $attachmentData['mime_type'] ?? $attachmentData['mimeType'] ?? '',
+                    $attachmentData['size'] ?? 0,
+                    $attachmentData['content_id'] ?? '',
+                    $attachmentData['disposition'] ?? '',
+                    date('Y-m-d H:i:s')
+                ])
+                ->execute();
+        } catch (Exception $e) {
+            // Log error but continue processing
+            error_log("Failed to save attachment: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Saves the attachment file content to disk
+     * 
+     * @param string $content The file content
+     * @param string $filepath The relative file path
+     * @return string|null The full path to the saved file or null on failure
+     */
+    private function saveAttachmentFile($content, $filepath)
+    {
+        try {
+            // Get the base attachments directory from environment or use a default
+            $baseDir = getenv('ATTACHMENTS_PATH');
+            if (empty($baseDir)) {
+                $baseDir = dirname(dirname(dirname(__DIR__))) . '/attachments';
+            }
+            
+            // Create the full path
+            $fullPath = $baseDir . '/' . $filepath;
+            
+            // Ensure the directory exists
+            $dirPath = dirname($fullPath);
+            if (!is_dir($dirPath)) {
+                if (!mkdir($dirPath, 0755, true)) {
+                    error_log("Failed to create directory: $dirPath");
+                    return null;
+                }
+            }
+            
+            // Save the file
+            if (file_put_contents($fullPath, $content) === false) {
+                error_log("Failed to write attachment to: $fullPath");
+                return null;
+            }
+            
+            return $fullPath;
+        } catch (Exception $e) {
+            error_log("Error saving attachment file: " . $e->getMessage());
+            return null;
+        }
     }
 
     /**

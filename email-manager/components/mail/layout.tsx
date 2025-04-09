@@ -12,7 +12,9 @@ import {
   Settings, 
   User, 
   Plus,
-  Menu
+  Menu,
+  Archive,
+  AlertCircle
 } from 'lucide-react';
 import { AccountSwitcher } from '@/components/mail/account-switcher';
 import type { Folder } from '@/lib/db/schema';
@@ -22,6 +24,21 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
   const [selectedAccountId, setSelectedAccountId] = useState(1); // Default to account ID 1
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper functions for folder categorization
+  const getStandardFolders = () => {
+    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
+    return folders.filter(f => 
+      f.name && standardNames.includes(f.name.toLowerCase())
+    );
+  };
+
+  const getCustomFolders = () => {
+    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
+    return folders.filter(f => 
+      f.name && !standardNames.includes(f.name.toLowerCase())
+    );
+  };
 
   // Load folders when account changes
   useEffect(() => {
@@ -69,15 +86,16 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
         <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">LibreMail</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">EmailManager</h1>
           </div>
         </div>
         
         {/* Account Switcher */}
         <div className="p-2 border-b border-gray-200 dark:border-gray-800">
-          <div className="bg-red-500 text-white p-4 rounded font-bold">
-            STATIC DEBUG ELEMENT - ACCOUNT SECTION
-          </div>
+          <AccountSwitcher 
+            selectedAccountId={selectedAccountId}
+            onAccountChange={handleAccountChange}
+          />
         </div>
         
         <div className="p-4">
@@ -95,44 +113,38 @@ export default function MailLayout({ children }: { children: React.ReactNode }) 
             <div className="text-center p-4 text-gray-500 dark:text-gray-400">Loading folders...</div>
           ) : (
             <div className="space-y-1">
-              {/* Default folders */}
-              <Link 
-                href="/mail/inbox" 
-                className="flex items-center px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              >
-                <Inbox className="h-4 w-4 mr-2" />
-                Inbox
-              </Link>
-              <Link 
-                href="/mail/sent" 
-                className="flex items-center px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Sent
-              </Link>
-              <Link 
-                href="/mail/drafts" 
-                className="flex items-center px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              >
-                <File className="h-4 w-4 mr-2" />
-                Drafts
-              </Link>
-              <Link 
-                href="/mail/trash" 
-                className="flex items-center px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Trash
-              </Link>
+              {/* Standard folders */}
+              {getStandardFolders().map((folder) => (
+                <Link
+                  key={folder.id}
+                  href={`/mail/${folder.name?.toLowerCase()}`}
+                  className="flex items-center px-3 py-2 text-sm rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                >
+                  {folder.name?.toLowerCase() === 'inbox' && <Inbox className="h-4 w-4 mr-2" />}
+                  {folder.name?.toLowerCase() === 'sent' && <Send className="h-4 w-4 mr-2" />}
+                  {folder.name?.toLowerCase() === 'drafts' && <File className="h-4 w-4 mr-2" />}
+                  {(folder.name?.toLowerCase() === 'trash' || folder.name?.toLowerCase() === 'bin') && 
+                    <Trash2 className="h-4 w-4 mr-2" />}
+                  {folder.name?.toLowerCase() === 'archive' && <Archive className="h-4 w-4 mr-2" />}
+                  {(folder.name?.toLowerCase() === 'junk' || folder.name?.toLowerCase() === 'spam') && 
+                    <AlertCircle className="h-4 w-4 mr-2" />}
+                  <span className="truncate">{folder.name}</span>
+                  {folder.count && folder.count > 0 ? (
+                    <span className="ml-auto bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-full px-2 py-0.5">
+                      {folder.count}
+                    </span>
+                  ) : null}
+                </Link>
+              ))}
               
               {/* Custom folders */}
-              {folders.length > 0 && (
+              {getCustomFolders().length > 0 && (
                 <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
                   <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Folders
                   </h3>
                   <div className="mt-2 space-y-1">
-                    {folders.map((folder) => (
+                    {getCustomFolders().map((folder) => (
                       <Link
                         key={folder.id}
                         href={`/mail/${folder.name?.toLowerCase()}`}

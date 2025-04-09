@@ -2,6 +2,25 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { 
+  Mail, 
+  Inbox, 
+  Send, 
+  FileText, 
+  Trash2, 
+  Archive, 
+  AlertCircle,
+  FolderIcon,
+  User,
+  Plus,
+  Settings,
+  Search,
+  Bell,
+  HelpCircle,
+  Menu as MenuIcon,
+  RefreshCw,
+  PenSquare
+} from 'lucide-react';
 import { AccountSwitcher } from '@/components/mail/account-switcher';
 import type { Folder } from '@/lib/db/schema';
 
@@ -38,7 +57,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
   // Filter folders into standard and custom
   const getStandardFolder = (name: string) => {
     return folders.find(f => 
-      f.name?.toLowerCase() === name.toLowerCase() || 
+      (f.name?.toLowerCase() === name.toLowerCase()) || 
       (name === 'junk' && f.name?.toLowerCase() === 'spam') ||
       (name === 'trash' && f.name?.toLowerCase() === 'bin')
     );
@@ -46,7 +65,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
   
   const getCustomFolders = () => {
     return folders.filter(f => 
-      !standardMailboxes.includes(f.name?.toLowerCase() || '')
+      f.name && !standardMailboxes.includes(f.name.toLowerCase())
     );
   };
 
@@ -62,9 +81,12 @@ export default function MailLayout({ children }: MailLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
+      <div className="w-64 flex-shrink-0 bg-gray-100 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold">LibreMail</h1>
+          <div className="flex items-center space-x-2">
+            <Mail className="h-5 w-5 text-blue-600" />
+            <h1 className="text-xl font-bold">EmailManager</h1>
+          </div>
         </div>
         
         {/* Account Switcher */}
@@ -90,7 +112,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/inbox?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">📥</span>
+                      <Inbox className="h-4 w-4 mr-2 text-gray-600" />
                       Inbox
                       {(() => {
                         const folder = getStandardFolder('inbox');
@@ -107,7 +129,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/drafts?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">📝</span>
+                      <FileText className="h-4 w-4 mr-2 text-gray-600" />
                       Drafts
                       {(() => {
                         const folder = getStandardFolder('drafts');
@@ -124,7 +146,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/sent?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">📤</span>
+                      <Send className="h-4 w-4 mr-2 text-gray-600" />
                       Sent
                       {(() => {
                         const folder = getStandardFolder('sent');
@@ -141,7 +163,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/junk?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">⚠️</span>
+                      <AlertCircle className="h-4 w-4 mr-2 text-gray-600" />
                       Junk
                       {(() => {
                         const folder = getStandardFolder('junk');
@@ -158,7 +180,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/trash?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">🗑️</span>
+                      <Trash2 className="h-4 w-4 mr-2 text-gray-600" />
                       Trash
                       {(() => {
                         const folder = getStandardFolder('trash');
@@ -175,7 +197,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
                       href={`/mail/archive?accountId=${selectedAccountId}`}
                       className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                     >
-                      <span className="mr-2">🗂️</span>
+                      <Archive className="h-4 w-4 mr-2 text-gray-600" />
                       Archive
                       {(() => {
                         const folder = getStandardFolder('archive');
@@ -203,8 +225,8 @@ export default function MailLayout({ children }: MailLayoutProps) {
                           href={`/mail/${folder.name?.toLowerCase()}?accountId=${selectedAccountId}`}
                           className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                         >
-                          <span className="mr-2">📁</span>
-                          {folder.name}
+                          <FolderIcon className="h-4 w-4 mr-2 text-gray-600" />
+                          <span className="truncate">{folder.name}</span>
                           {(() => {
                             return folder.count && folder.count > 0 ? (
                               <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
@@ -227,6 +249,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
             href={`/mail/compose?accountId=${selectedAccountId}`}
             className="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
           >
+            <Plus className="h-4 w-4 mr-2 text-white" />
             Compose
           </Link>
         </div>
@@ -243,13 +266,35 @@ export default function MailLayout({ children }: MailLayoutProps) {
                 className="w-full max-w-md pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <span className="absolute left-3 top-2.5 text-gray-400">
-                🔍
+                <Search className="h-4 w-4" />
               </span>
             </div>
           </div>
-          <div>
-            <button className="p-2 rounded-full hover:bg-gray-100">
-              <span>👤</span>
+          <div className="flex items-center space-x-3">
+            <button className="p-2 rounded-full hover:bg-gray-100" title="Get Mail">
+              <RefreshCw className="h-5 w-5 text-gray-600" />
+            </button>
+            <Link
+              href={`/mail/compose?accountId=${selectedAccountId}`}
+              className="p-2 rounded-full hover:bg-gray-100"
+              title="New Message"
+            >
+              <PenSquare className="h-5 w-5 text-gray-600" />
+            </Link>
+            
+            <div className="h-8 border-l border-gray-300 mx-2"></div>
+            
+            <button className="p-2 rounded-full hover:bg-gray-100" title="Notifications">
+              <Bell className="h-5 w-5 text-gray-600" />
+            </button>
+            <button className="p-2 rounded-full hover:bg-gray-100" title="Settings">
+              <Settings className="h-5 w-5 text-gray-600" />
+            </button>
+            <button className="p-2 rounded-full hover:bg-gray-100" title="Help">
+              <HelpCircle className="h-5 w-5 text-gray-600" />
+            </button>
+            <button className="p-2 rounded-full hover:bg-gray-100" title="Account">
+              <User className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         </header>

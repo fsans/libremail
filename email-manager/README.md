@@ -1,10 +1,10 @@
-# LibreMail Email Manager
+# EmailManager Email Manager
 
-A modern web interface for LibreMail built with Next.js and shadcn/ui.
+A modern web interface for EmailManager built with Next.js and shadcn/ui.
 
 ## Overview
 
-Email Manager is a Next.js application that provides a modern user interface for the LibreMail system. It connects to the same MySQL database used by the LibreMail sync component to display and manage emails.
+EmailManager is a Next.js application that provides a modern user interface for the EmailManager system. It connects to the same MySQL database used by the EmailManager sync component to display and manage emails.
 
 ## Features
 
@@ -17,28 +17,28 @@ Email Manager is a Next.js application that provides a modern user interface for
 ## Prerequisites
 
 - Node.js 18.0.0 or later
-- LibreMail sync component running and connected to a MySQL database
-- MySQL database with LibreMail schema
+- EmailManager sync component running and connected to a MySQL database
+- MySQL database with EmailManager schema
 
 ## Getting Started
 
 ### Installation
 
-1. Clone the repository (if not already done)
-2. Navigate to the email-manager directory
-3. Install dependencies:
+1 Clone the repository (if not already done)
+2 Navigate to the email-manager directory
+3 Install dependencies:
 
 ```bash
 npm install
 ```
 
-4. Create a `.env.local` file with your database configuration:
+4 Create a `.env.local` file with your database configuration:
 
 ```env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_password
-DB_NAME=libremail
+DB_NAME=emailmanager
 DB_PORT=3306
 
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -86,4 +86,4 @@ npm start
 
 ## License
 
-This project is licensed under the same license as the main LibreMail project.
+This project is licensed under the same license as the main EmailManager project.

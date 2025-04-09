@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { RefreshCw, Filter, MessageSquare } from 'lucide-react';
 import { formatEmailDate } from '@/lib/utils/date-formatter';
 import { parseEmailAddresses } from '@/lib/utils/email-parser';
 import type { Message } from '@/lib/db/schema';
@@ -25,11 +26,14 @@ export function MailList({ messages, currentFolder, onSelectMessage }: MailListP
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-xl font-semibold capitalize">{currentFolder}</h2>
         <div className="flex space-x-2">
-          <button className="p-2 rounded hover:bg-gray-100">
-            <span>🔄</span>
+          <button className="p-2 rounded hover:bg-gray-100" title="Refresh">
+            <RefreshCw className="h-4 w-4 text-gray-600" />
           </button>
-          <button className="p-2 rounded hover:bg-gray-100">
-            <span>⚙️</span>
+          <button className="p-2 rounded hover:bg-gray-100" title="Filter messages">
+            <Filter className="h-4 w-4 text-gray-600" />
+          </button>
+          <button className="p-2 rounded hover:bg-gray-100" title="Toggle conversation threads">
+            <MessageSquare className="h-4 w-4 text-gray-600" />
           </button>
         </div>
       </div>

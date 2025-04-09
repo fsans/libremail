@@ -7,7 +7,7 @@ export default function Home() {
         <h1 className="text-6xl font-bold">
           Welcome to{' '}
           <span className="text-blue-600">
-            LibreMail
+            EmailManager
           </span>
         </h1>
 
@@ -42,7 +42,7 @@ export default function Home() {
         <p>
           Powered by{' '}
           <span className="font-bold">
-            LibreMail
+            EmailManager
           </span>
         </p>
       </footer>

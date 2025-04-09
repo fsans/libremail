@@ -137,10 +137,25 @@ export const outboxRelations = relations(outbox, ({ one }) => ({
 }));
 
 // Attachments table
+
+/*
+[{
+"id":"531eba2a4b7b9a73d2a6ebbe00eb53f1",
+"name":"fwovoz.jpeg",
+"filename":"fwovoz.jpeg",
+"filepath":"2025/04/16_531eba2a4b7b9a73d2a6ebbe00eb53f1_fwovoz.jpeg",
+"mimeType":"image/jpeg",
+"origName":"fwovoz.jpeg",
+"origFilename":"fwovoz.jpeg"}]
+
+*/
 export const attachments = mysqlTable('attachments', {
   id: int('id').primaryKey().autoincrement(),
   message_id: int('message_id'),
   filename: varchar('filename', { length: 255 }),
+  origName: varchar('origName', { length: 255 }),
+  origFilename: varchar('origFilename', { length: 255 }),
+  filepath: varchar('filepath', { length: 255 }),
   mime_type: varchar('mime_type', { length: 255 }),
   size: int('size'),
   content_id: varchar('content_id', { length: 255 }),
