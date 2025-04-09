@@ -32,6 +32,24 @@ export default function MailLayout({ children }: MailLayoutProps) {
     loadFolders();
   }, [selectedAccountId]);
 
+  // Standard mailbox names (case insensitive)
+  const standardMailboxes = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
+  
+  // Filter folders into standard and custom
+  const getStandardFolder = (name: string) => {
+    return folders.find(f => 
+      f.name?.toLowerCase() === name.toLowerCase() || 
+      (name === 'junk' && f.name?.toLowerCase() === 'spam') ||
+      (name === 'trash' && f.name?.toLowerCase() === 'bin')
+    );
+  };
+  
+  const getCustomFolders = () => {
+    return folders.filter(f => 
+      !standardMailboxes.includes(f.name?.toLowerCase() || '')
+    );
+  };
+
   const handleAccountChange = (accountId: number) => {
     setSelectedAccountId(accountId);
     
@@ -74,15 +92,14 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     >
                       <span className="mr-2">📥</span>
                       Inbox
-                    </Link>
-                  </li>
-                  <li>
-                    <Link 
-                      href={`/mail/sent?accountId=${selectedAccountId}`}
-                      className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
-                    >
-                      <span className="mr-2">📤</span>
-                      Sent
+                      {(() => {
+                        const folder = getStandardFolder('inbox');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
                     </Link>
                   </li>
                   <li>
@@ -92,6 +109,48 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     >
                       <span className="mr-2">📝</span>
                       Drafts
+                      {(() => {
+                        const folder = getStandardFolder('drafts');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      href={`/mail/sent?accountId=${selectedAccountId}`}
+                      className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                    >
+                      <span className="mr-2">📤</span>
+                      Sent
+                      {(() => {
+                        const folder = getStandardFolder('sent');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      href={`/mail/junk?accountId=${selectedAccountId}`}
+                      className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                    >
+                      <span className="mr-2">⚠️</span>
+                      Junk
+                      {(() => {
+                        const folder = getStandardFolder('junk');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
                     </Link>
                   </li>
                   <li>
@@ -101,31 +160,58 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     >
                       <span className="mr-2">🗑️</span>
                       Trash
+                      {(() => {
+                        const folder = getStandardFolder('trash');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      href={`/mail/archive?accountId=${selectedAccountId}`}
+                      className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                    >
+                      <span className="mr-2">🗂️</span>
+                      Archive
+                      {(() => {
+                        const folder = getStandardFolder('archive');
+                        return folder?.count && folder.count > 0 ? (
+                          <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            {folder.count}
+                          </span>
+                        ) : null;
+                      })()}
                     </Link>
                   </li>
                 </ul>
               </div>
               
               {/* Custom folders */}
-              {folders.length > 0 && (
+              {getCustomFolders().length > 0 && (
                 <div>
                   <div className="px-3 py-2 text-sm font-medium text-gray-500">
                     Folders
                   </div>
                   <ul className="space-y-1">
-                    {folders.map((folder) => (
+                    {getCustomFolders().map((folder) => (
                       <li key={folder.id}>
                         <Link 
                           href={`/mail/${folder.name?.toLowerCase()}?accountId=${selectedAccountId}`}
                           className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
                         >
-                          <span className="mr-2">🗂️</span>
+                          <span className="mr-2">📁</span>
                           {folder.name}
-                          {folder.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
-                              {folder.count}
-                            </span>
-                          ) : null}
+                          {(() => {
+                            return folder.count && folder.count > 0 ? (
+                              <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                                {folder.count}
+                              </span>
+                            ) : null;
+                          })()}
                         </Link>
                       </li>
                     ))}

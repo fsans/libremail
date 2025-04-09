@@ -17,6 +17,13 @@ export default function FolderPage() {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [relatedFolders, setRelatedFolders] = useState<Folder[]>([]);
+  
+  // Standard mailbox names (case insensitive)
+  const standardMailboxes = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
+  
+  // Check if the current folder is a standard mailbox
+  const isStandardMailbox = standardMailboxes.includes(folderName.toLowerCase());
   
   useEffect(() => {
     async function loadFolders() {
@@ -24,13 +31,47 @@ export default function FolderPage() {
         const response = await fetch(`/api/folders?accountId=${accountId}`);
         const data = await response.json();
         
-        // Find the current folder
-        const folder = data.find((f: Folder) => 
-          f.name?.toLowerCase() === folderName.toLowerCase()
-        );
-        
-        if (folder) {
-          setCurrentFolder(folder);
+        if (isStandardMailbox) {
+          // For standard mailboxes, find all related folders
+          // For example, for "Sent" find both "Sent" and "INBOX.Sent"
+          const related = data.filter((f: Folder) => {
+            const name = f.name?.toLowerCase() || '';
+            
+            // Direct match (e.g., "sent" matches "Sent")
+            if (name === folderName.toLowerCase()) return true;
+            
+            // INBOX prefix match (e.g., "inbox.sent" matches "Sent")
+            if (name.startsWith('inbox.') && name.substring(6) === folderName.toLowerCase()) return true;
+            
+            // Special cases for alternative names
+            if (folderName.toLowerCase() === 'junk' && name === 'spam') return true;
+            if (folderName.toLowerCase() === 'junk' && name === 'inbox.spam') return true;
+            if (folderName.toLowerCase() === 'trash' && name === 'bin') return true;
+            if (folderName.toLowerCase() === 'trash' && name === 'inbox.bin') return true;
+            
+            return false;
+          });
+          
+          setRelatedFolders(related);
+          
+          // Set the primary folder for display purposes
+          const primaryFolder = related.find((f: Folder) => 
+            f.name?.toLowerCase() === folderName.toLowerCase()
+          ) || related[0];
+          
+          if (primaryFolder) {
+            setCurrentFolder(primaryFolder);
+          }
+        } else {
+          // For custom folders, just find the exact match
+          const folder = data.find((f: Folder) => 
+            f.name?.toLowerCase() === folderName.toLowerCase()
+          );
+          
+          if (folder) {
+            setCurrentFolder(folder);
+            setRelatedFolders([folder]);
+          }
         }
       } catch (error) {
         console.error('Error loading folders:', error);
@@ -38,17 +79,30 @@ export default function FolderPage() {
     }
     
     loadFolders();
-  }, [accountId, folderName]);
+  }, [accountId, folderName, isStandardMailbox]);
   
   useEffect(() => {
     async function loadMessages() {
-      if (!currentFolder) return;
+      if (relatedFolders.length === 0) return;
       
       setLoading(true);
       try {
-        const response = await fetch(`/api/emails?folderId=${currentFolder.id}&accountId=${accountId}`);
-        const data = await response.json();
-        setMessages(data);
+        // For standard mailboxes, fetch messages from all related folders
+        const allMessages: Message[] = [];
+        
+        // Fetch messages from each related folder
+        for (const folder of relatedFolders) {
+          const response = await fetch(`/api/emails?folderId=${folder.id}&accountId=${accountId}`);
+          const data = await response.json();
+          allMessages.push(...data);
+        }
+        
+        // Sort all messages by date (newest first)
+        allMessages.sort((a: Message, b: Message) => {
+          return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
+        });
+        
+        setMessages(allMessages);
       } catch (error) {
         console.error('Error loading messages:', error);
       } finally {
@@ -57,7 +111,7 @@ export default function FolderPage() {
     }
     
     loadMessages();
-  }, [currentFolder, accountId]);
+  }, [relatedFolders, accountId]);
   
   if (loading) {
     return (
