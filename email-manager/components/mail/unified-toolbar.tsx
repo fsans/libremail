@@ -20,6 +20,7 @@ import {
   MoreHorizontal,
   ChevronLeft
 } from 'lucide-react';
+import { useMailContext } from '@/app/mail/layout';
 
 interface UnifiedToolbarProps {
   currentFolder: string;
@@ -33,6 +34,7 @@ export function UnifiedToolbar({
   onRefresh
 }: UnifiedToolbarProps) {
   const router = useRouter();
+  const { resetSelectedMessageId } = useMailContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
@@ -128,8 +130,9 @@ export function UnifiedToolbar({
           title="Back to list"
           onClick={() => {
             if (selectedMessageId !== null) {
-              // Navigate back to the folder view
+              // Navigate back to the folder view and reset selectedMessageId
               router.push(`/mail/${currentFolder}`);
+              resetSelectedMessageId();
             }
           }}
           disabled={selectedMessageId === null}

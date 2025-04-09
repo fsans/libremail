@@ -2,6 +2,7 @@
 
 import { ReactNode, useState, useEffect, createContext, useContext } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Mail, 
   Inbox, 
@@ -28,6 +29,7 @@ interface MailLayoutProps {
 interface MailContextType {
   selectedMessageId: number | null;
   setSelectedMessageId: (id: number | null) => void;
+  resetSelectedMessageId: () => void;
   currentFolder: string;
   setCurrentFolder: (folder: string) => void;
 }
@@ -35,6 +37,7 @@ interface MailContextType {
 const MailContext = createContext<MailContextType>({
   selectedMessageId: null,
   setSelectedMessageId: () => {},
+  resetSelectedMessageId: () => {},
   currentFolder: 'inbox',
   setCurrentFolder: () => {}
 });
@@ -51,6 +54,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [currentFolder, setCurrentFolder] = useState<string>('inbox');
+  const router = useRouter();
 
   // Helper functions for folder categorization
   const getStandardFolders = () => {
@@ -113,10 +117,14 @@ export default function MailLayout({ children }: MailLayoutProps) {
   const handleAccountChange = (accountId: number) => {
     setSelectedAccountId(accountId);
     
-    // Update URL to include the new account ID
-    const url = new URL(window.location.href);
-    url.searchParams.set('accountId', accountId.toString());
-    window.history.pushState({}, '', url.toString());
+    // Reset message selection when changing accounts
+    setSelectedMessageId(null);
+    
+    // Reset to inbox folder when changing accounts
+    setCurrentFolder('inbox');
+    
+    // Navigate to the inbox folder of the new account
+    router.push(`/mail/inbox?accountId=${accountId}`);
   };
 
   // Handle message selection
@@ -166,6 +174,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
     <MailContext.Provider value={{
       selectedMessageId,
       setSelectedMessageId: handleMessageSelect,
+      resetSelectedMessageId: () => setSelectedMessageId(null),
       currentFolder,
       setCurrentFolder: handleFolderSelect,
     }}>
