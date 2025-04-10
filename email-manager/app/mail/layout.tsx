@@ -113,6 +113,32 @@ export default function MailLayout({ children }: MailLayoutProps) {
     console.log(selectedMessageId);
   }, [selectedMessageId]);
 
+  // Add a useEffect to monitor URL changes and update toolbar state
+  useEffect(() => {
+    // This function will run on component mount and when the URL changes
+    const handleRouteChange = () => {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        const isMessageView = /\/mail\/[^\/]+\/\d+$/.test(path);
+        
+        if (!isMessageView) {
+          // If we're not in a message view, ensure selectedMessageId is null
+          console.log('Route changed to non-message view, resetting selectedMessageId');
+          setSelectedMessageId(null);
+        }
+      }
+    };
+    
+    // Run once on mount
+    handleRouteChange();
+    
+    // Set up an interval to check for URL changes
+    // This is a workaround since Next.js App Router doesn't provide a built-in way to listen for route changes
+    const interval = setInterval(handleRouteChange, 100);
+    
+    return () => clearInterval(interval);
+  }, [setSelectedMessageId]);
+
   // Handle account change
   const handleAccountChange = (accountId: number) => {
     setSelectedAccountId(accountId);
@@ -215,23 +241,23 @@ export default function MailLayout({ children }: MailLayoutProps) {
               <div className="text-center p-4 text-gray-500">Loading folders...</div>
             ) : (
               <>
-                <div className="mb-4">
-                  <div className="px-3 py-2 text-sm font-medium text-gray-500">
+                <div className="mb-3">
+                  <div className="px-2 py-1 text-xs font-medium text-gray-500">
                     Mailboxes
                   </div>
-                  <ul className="space-y-1">
+                  <ul className="space-y-0.5">
                     <li>
                       <Link 
                         href={`/mail/inbox?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('inbox')}
                       >
-                        <Inbox className="h-4 w-4 mr-2 text-gray-600" />
+                        <Inbox className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Inbox
                         {(() => {
                           const folder = getStandardFolder('inbox');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -241,15 +267,15 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     <li>
                       <Link 
                         href={`/mail/drafts?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('drafts')}
                       >
-                        <File className="h-4 w-4 mr-2 text-gray-600" />
+                        <File className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Drafts
                         {(() => {
                           const folder = getStandardFolder('drafts');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -259,15 +285,15 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     <li>
                       <Link 
                         href={`/mail/sent?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('sent')}
                       >
-                        <Send className="h-4 w-4 mr-2 text-gray-600" />
+                        <Send className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Sent
                         {(() => {
                           const folder = getStandardFolder('sent');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -277,15 +303,15 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     <li>
                       <Link 
                         href={`/mail/junk?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('junk')}
                       >
-                        <AlertCircle className="h-4 w-4 mr-2 text-gray-600" />
+                        <AlertCircle className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Junk
                         {(() => {
                           const folder = getStandardFolder('junk');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -295,15 +321,15 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     <li>
                       <Link 
                         href={`/mail/trash?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('trash')}
                       >
-                        <Trash2 className="h-4 w-4 mr-2 text-gray-600" />
+                        <Trash2 className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Trash
                         {(() => {
                           const folder = getStandardFolder('trash');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -313,15 +339,15 @@ export default function MailLayout({ children }: MailLayoutProps) {
                     <li>
                       <Link 
                         href={`/mail/archive?accountId=${selectedAccountId}`}
-                        className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                         onClick={() => handleFolderSelect('archive')}
                       >
-                        <Archive className="h-4 w-4 mr-2 text-gray-600" />
+                        <Archive className="h-3.5 w-3.5 mr-2 text-gray-600" />
                         Archive
                         {(() => {
                           const folder = getStandardFolder('archive');
                           return folder?.count && folder.count > 0 ? (
-                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                               {folder.count}
                             </span>
                           ) : null;
@@ -333,23 +359,23 @@ export default function MailLayout({ children }: MailLayoutProps) {
                 
                 {/* Custom folders */}
                 {getCustomFolders().length > 0 && (
-                  <div>
-                    <div className="px-3 py-2 text-sm font-medium text-gray-500">
+                  <div className="mt-3 mb-2">
+                    <div className="px-2 py-1 text-xs font-medium text-gray-500">
                       Folders
                     </div>
-                    <ul className="space-y-1">
+                    <ul className="space-y-0.5">
                       {getCustomFolders().map((folder) => (
                         <li key={folder.id}>
                           <Link 
                             href={`/mail/${folder.name?.toLowerCase()}?accountId=${selectedAccountId}`}
-                            className="flex items-center px-3 py-2 text-sm rounded-md hover:bg-gray-200"
+                            className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
                             onClick={() => folder.name && handleFolderSelect(folder.name)}
                           >
-                            <FolderIcon className="h-4 w-4 mr-2 text-gray-600" />
+                            <FolderIcon className="h-3.5 w-3.5 mr-2 text-gray-600" />
                             <span className="truncate">{folder.name}</span>
                             {(() => {
                               return folder.count && folder.count > 0 ? (
-                                <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-2 py-0.5">
+                                <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
                                   {folder.count}
                                 </span>
                               ) : null;
@@ -371,6 +397,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
           <UnifiedToolbar 
             currentFolder={currentFolder}
             selectedMessageId={selectedMessageId}
+            selectedAccountId={selectedAccountId}
             onRefresh={handleRefresh}
           />
           
