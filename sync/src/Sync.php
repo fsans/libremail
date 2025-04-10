@@ -419,7 +419,7 @@ class Sync
         $this->mailbox = new Mailbox(
             $account->imap_host,
             $account->email,
-            $account->password,
+            $account->getAuthPassword(),
             '',
             $attachmentsPath,
             [

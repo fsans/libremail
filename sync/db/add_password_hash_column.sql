@@ -1,0 +1,1 @@
+ALTER TABLE `accounts` ADD COLUMN `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `password`;

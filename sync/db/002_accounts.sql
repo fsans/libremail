@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `imap_host` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `imap_port` mediumint(5) DEFAULT NULL,
   `imap_flags` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,

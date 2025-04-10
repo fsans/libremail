@@ -418,12 +418,17 @@ class Diagnostics
     {
         $sync = new Sync;
         $sync->setConfig(self::$config);
-        $sync->connect(new AccountModel([
+        
+        // Create an account model with the provided credentials
+        $accountModel = new AccountModel([
             'email' => $account['email'],
             'password' => $account['password'],
+            'password_hash' => $account['password_hash'] ?? null,
             'imap_host' => $account['imap_host'],
             'imap_port' => $account['imap_port']
-        ]), false);
+        ]);
+        
+        $sync->connect($accountModel, false);
     }
 
     /**

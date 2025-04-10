@@ -8,6 +8,7 @@ export const accounts = mysqlTable('accounts', {
   name: varchar('name', { length: 100 }),
   email: varchar('email', { length: 100 }),
   password: varchar('password', { length: 100 }),
+  password_hash: varchar('password_hash', { length: 255 }),
   imap_host: varchar('imap_host', { length: 50 }),
   imap_port: mediumint('imap_port'),
   imap_flags: varchar('imap_flags', { length: 50 }),
