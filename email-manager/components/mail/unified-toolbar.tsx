@@ -173,7 +173,7 @@ export function UnifiedToolbar({
   };
 
   return (
-    <div className="h-[75px] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white dark:bg-gray-950">
+    <div className="h-[50px] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 bg-white dark:bg-gray-950">
       {/* Left section - Actions */}
       <div className="flex items-center">
         {/* Back button and folder name in a fixed width container */}

@@ -44,21 +44,25 @@ export function MailList({ messages, currentFolder }: MailListProps) {
                   className={`
                     hover:bg-gray-50 cursor-pointer
                     ${selectedId === message.id ? 'bg-blue-50' : ''}
-                    ${!message.seen ? 'font-semibold' : ''}
+                    relative
                   `}
                   onClick={() => handleSelectMessage(message.id)}
                 >
+                  {!message.seen && (
+                    <div className="absolute left-3 top-3 transform -translate-y-1/2 w-2 h-2 rounded-full bg-blue-700 z-10"></div>
+                  )}
                   <Link 
                     href={`/mail/${currentFolder}/${message.id}`}
-                    className="block px-4 py-3"
+                    className="block px-4 py-1"
                   >
-                    <div className="flex justify-between">
-                      <span className="text-xs">{fromName}</span>
-                      <span className="text-xs text-gray-500">
+                    <div className="flex justify-between pl-3">
+                      <span className="text-[10px] font-semibold">{fromName}</span>
+                      <span className="text-[10px] text-gray-500">
                         {formatEmailDate(message.date || new Date())}
                       </span>
                     </div>
-                    <div className="text-xs truncate">{message.subject}</div>
+                    <div className="text-[10px] truncate pl-3">{message.subject}</div>
+                    <div className="text-[10px] text-gray-500 truncate mt-0.5 pl-5">{message.snippet || ''}</div>
                   </Link>
                 </li>
               );
