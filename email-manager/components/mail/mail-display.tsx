@@ -97,35 +97,43 @@ export function MailDisplay({ message }: MailDisplayProps) {
   
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-950">
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-            {message.subject}
-          </h1>
+
+      <div className="px-4 py-3">
+        {/* Message header */}
+        <div className="mb-3">
+          
           
           <div className="flex items-start">
-            <Avatar className="h-10 w-10 mr-4">
-              <AvatarFallback className="bg-blue-100 text-blue-600">
+
+            <Avatar className="h-7 w-7 mr-2">
+              <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
                 {senderInitials}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1 min-w-0">
+
               <div className="flex justify-between items-start">
+                
+                {/* subject and sender */}
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-gray-100">
+                  <div className="font-medium text-xs text-gray-900 dark:text-gray-100">
+                    {message.subject}
+                  </div>
+                  <div className="font-medium text-xs text-gray-900 dark:text-gray-100">
                     {senderName}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-[10px] text-gray-500">
                     {senderEmail}
                   </div>
                 </div>
                 
+                {/* Date and attachments */}
                 <div className="flex flex-col items-end">
-                  <div className="text-sm text-gray-500">
+                  <div className="text-[10px] text-gray-500">
                     {formatEmailDate(message.date || new Date(), true)}
                   </div>
-                  <div className="flex items-center mt-1">
+                  <div className="flex items-center">
                     {hasAnyAttachments() && (
                       <div className="relative">
                         <button 
@@ -189,14 +197,14 @@ export function MailDisplay({ message }: MailDisplayProps) {
                 </div>
               </div>
               
-              <div className="mt-1 flex items-center">
-                <div className="text-sm text-gray-500 mr-2">
+              <div className="mt-0.5 flex items-center">
+                <div className="text-[10px] text-gray-500 mr-2">
                   To: {toAddresses.map(a => a.name || a.address).join(', ')}
                 </div>
                 
                 <button 
                   onClick={() => setShowDetails(!showDetails)}
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                  className="text-[10px] text-blue-600 hover:text-blue-800 flex items-center"
                 >
                   {showDetails ? (
                     <>
@@ -213,7 +221,7 @@ export function MailDisplay({ message }: MailDisplayProps) {
               </div>
               
               {showDetails && (
-                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <div className="mt-1 text-[10px] text-gray-600 dark:text-gray-400 space-y-0.5">
                   {ccAddresses.length > 0 && (
                     <div>
                       <span className="font-medium">Cc: </span>

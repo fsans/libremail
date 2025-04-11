@@ -36,7 +36,7 @@ export function UnifiedToolbar({
   onRefresh
 }: UnifiedToolbarProps) {
   const router = useRouter();
-  const { resetSelectedMessageId } = useMailContext();
+  const { resetSelectedMessageId, setCurrentFolder } = useMailContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [accountName, setAccountName] = useState('Account');
@@ -46,10 +46,42 @@ export function UnifiedToolbar({
   useEffect(() => {
   }, [selectedMessageId]);
 
-  // Fetch account information
+  // Function to fetch search results count
+  const fetchSearchResultsCount = async (query: string) => {
+    if (!query || !selectedAccountId) return;
+    
+    try {
+      console.log('Fetching search results count for query:', query);
+      const searchResponse = await fetch(`/api/emails?accountId=${selectedAccountId}&query=${encodeURIComponent(query)}`);
+      
+      if (!searchResponse.ok) {
+        console.error('Error fetching search results:', searchResponse.statusText);
+        setMessageCount(0);
+        return;
+      }
+      
+      const searchData = await searchResponse.json();
+      const count = Array.isArray(searchData) ? searchData.length : 0;
+      console.log('Search results count:', count);
+      
+      // Update message count with search results count
+      setMessageCount(count);
+    } catch (error) {
+      console.error('Error processing search results:', error);
+      setMessageCount(0);
+    }
+  };
+
+  // Fetch account information and folder message count
   useEffect(() => {
     // Skip the effect if selectedAccountId is not yet available
     if (selectedAccountId === undefined) return;
+    
+    // Skip fetching folder count if we're in search mode
+    // This prevents the folder count from overriding the search count
+    if (isSearching) {
+      return;
+    }
     
     async function fetchAccountInfo() {
       try {
@@ -70,7 +102,7 @@ export function UnifiedToolbar({
           }
         }
         
-        // Get folder message count
+        // Get folder message count (only if not in search mode)
         const foldersResponse = await fetch(`/api/folders?accountId=${selectedAccountId}`);
         const foldersData = await foldersResponse.json();
         
@@ -94,7 +126,7 @@ export function UnifiedToolbar({
     }
     
     fetchAccountInfo();
-  }, [currentFolder, selectedAccountId]);
+  }, [currentFolder, selectedAccountId, isSearching]);
 
   // Handle search submission
   const handleSearch = (e: React.FormEvent) => {
@@ -103,8 +135,14 @@ export function UnifiedToolbar({
     
     setIsSearching(true);
     
+    // Set the context to "Search" when performing a search
+    setCurrentFolder('Search');
+    
     // Redirect to the current folder with search query parameter
     router.push(`/mail/${currentFolder}?q=${encodeURIComponent(searchQuery)}&accountId=${selectedAccountId}`);
+    
+    // Update search results count immediately after search submission
+    fetchSearchResultsCount(searchQuery);
   };
 
   // Clear search and return to normal folder view
@@ -125,28 +163,31 @@ export function UnifiedToolbar({
     setSearchQuery('');
     setIsSearching(false);
     
+    // Update the current folder in the context to ensure the label is updated
+    setCurrentFolder(targetFolder);
+    
     // Redirect to the appropriate folder without search query parameter
     router.push(`/mail/${targetFolder}?accountId=${selectedAccountId}`);
   };
 
-  // Sync search state with URL
+  // Sync search state with URL on component mount and URL changes
   useEffect(() => {
-    // Need to run this effect on component mount and when URL changes
     const syncSearchStateWithUrl = () => {
       try {
-        // Check if the URL has a search query parameter
         const url = new URL(window.location.href);
         const hasSearchParam = url.searchParams.has('q');
         
         // Update isSearching state based on URL
         setIsSearching(hasSearchParam);
         
-        // If there's a search parameter in the URL, update the search query state
         if (hasSearchParam) {
           const queryParam = url.searchParams.get('q');
           if (queryParam) {
             setSearchQuery(queryParam);
           }
+        } else {
+          // If there's no search param, ensure search query is cleared
+          setSearchQuery('');
         }
       } catch (error) {
         console.error('Error parsing URL:', error);
@@ -164,6 +205,19 @@ export function UnifiedToolbar({
       window.removeEventListener('popstate', syncSearchStateWithUrl);
     };
   }, []);
+
+  // Also sync search state when currentFolder changes
+  useEffect(() => {
+    // If folder changes, check if we should reset search state
+    const url = new URL(window.location.href);
+    const hasSearchParam = url.searchParams.has('q');
+    
+    // Only update if we're not in search mode according to URL
+    if (!hasSearchParam && isSearching) {
+      setIsSearching(false);
+      setSearchQuery('');
+    }
+  }, [currentFolder]);
 
   // Handle refresh button click
   const handleRefresh = async () => {
@@ -294,17 +348,6 @@ export function UnifiedToolbar({
           
           <div className="h-6 border-l border-gray-200 dark:border-gray-700 mx-2"></div>
           
-          <button 
-            className={`p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 ${
-              selectedMessageId !== null ? 'opacity-50' : ''
-            }`}
-            title="Refresh"
-            onClick={handleRefresh}
-            disabled={false} // Always enabled
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </button>
-
           {/* Compose - always enabled and visible */}
           <Link
             href="/mail/compose"
