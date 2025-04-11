@@ -153,7 +153,9 @@ export default function FolderPage() {
       
       <MailList 
         messages={messages} 
-        currentFolder={isSearchMode ? `Search: ${searchQuery}` : folderName} 
+        currentFolder={folderName}
+        isSearchMode={isSearchMode}
+        searchQuery={searchQuery}
       />
     </div>
   );

@@ -250,7 +250,7 @@ export function UnifiedToolbar({
           {/* Always show folder name within the fixed width container - now in two lines */}
           <div className="flex flex-col justify-center flex-1 overflow-hidden">
             <div className="text-xs font-semibold capitalize text-gray-900 dark:text-gray-100 truncate">
-              {currentFolder} - {accountName}
+              {isSearching ? 'Search' : currentFolder} - {accountName}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {/* Placeholder for message count */}

@@ -10,16 +10,29 @@ import { Paperclip, Flag } from 'lucide-react';
 interface MailListProps {
   messages: Message[];
   currentFolder: string;
+  isSearchMode?: boolean;
+  searchQuery?: string | null;
 }
 
-export function MailList({ messages, currentFolder }: MailListProps) {
+export function MailList({ 
+  messages, 
+  currentFolder, 
+  isSearchMode = false,
+  searchQuery = null
+}: MailListProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const { setSelectedMessageId, setCurrentFolder } = useMailContext();
   
   // Update the current folder in the context when it changes
   useEffect(() => {
-    setCurrentFolder(currentFolder);
-  }, [currentFolder, setCurrentFolder]);
+    // If in search mode, set a display name for the context
+    // but keep the actual folder name for navigation purposes
+    if (isSearchMode) {
+      setCurrentFolder('Search');
+    } else {
+      setCurrentFolder(currentFolder);
+    }
+  }, [currentFolder, setCurrentFolder, isSearchMode]);
   
   const handleSelectMessage = (id: number) => {
     setSelectedId(id);
