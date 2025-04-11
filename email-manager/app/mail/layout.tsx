@@ -64,23 +64,43 @@ export default function MailLayout({ children }: MailLayoutProps) {
 
   // Helper functions for folder categorization
   const getStandardFolders = () => {
-    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
-    return folders.filter(f => 
-      f.name && standardNames.includes(f.name.toLowerCase())
-    );
+    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive', 'notes'];
+    return folders.filter(f => {
+      if (!f.name) return false;
+      
+      // Handle both standard names and INBOX.Name format
+      const lowerName = f.name.toLowerCase();
+      return standardNames.includes(lowerName) || 
+             standardNames.some(std => lowerName === `inbox.${std}`);
+    });
   };
   
   const getCustomFolders = () => {
-    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
-    return folders.filter(f => 
-      f.name && !standardNames.includes(f.name.toLowerCase())
-    );
+    const standardNames = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive', 'notes'];
+    return folders.filter(f => {
+      if (!f.name) return false;
+      
+      // Exclude both standard names and INBOX.Name format
+      const lowerName = f.name.toLowerCase();
+      return !standardNames.includes(lowerName) && 
+             !standardNames.some(std => lowerName === `inbox.${std}`) &&
+             // Also exclude the INBOX folder itself (already handled in standard folders)
+             lowerName !== 'inbox';
+    });
   };
   
   const getStandardFolder = (name: string) => {
-    const folder = getStandardFolders().find(f => 
+    // First try to find an exact match
+    let folder = getStandardFolders().find(f => 
       f.name?.toLowerCase() === name.toLowerCase()
     );
+    
+    // If not found, try with INBOX. prefix
+    if (!folder) {
+      folder = getStandardFolders().find(f => 
+        f.name?.toLowerCase() === `inbox.${name.toLowerCase()}`
+      );
+    }
     
     // Add message count if available
     if (folder) {
@@ -437,25 +457,47 @@ export default function MailLayout({ children }: MailLayoutProps) {
                         })()}
                       </Link>
                     </li>
+                    <li>
+                      <Link 
+                        href={`/mail/notes?accountId=${selectedAccountId}`}
+                        className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
+                        onClick={() => handleFolderSelect('notes')}
+                      >
+                        <File className="h-3.5 w-3.5 mr-2 text-gray-600" />
+                        Notes
+                        {(() => {
+                          const folder = getStandardFolder('notes');
+                          return folder?.count && folder.count > 0 ? (
+                            <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
+                              {folder.count}
+                            </span>
+                          ) : null;
+                        })()}
+                      </Link>
+                    </li>
                   </ul>
                 </div>
                 
                 {/* Custom folders */}
                 {getCustomFolders().length > 0 && (
-                  <div className="mt-3 mb-2">
-                    <div className="px-2 py-1 text-xs font-medium text-gray-500">
+                  <div className="mt-2 mb-2">
+                    <div className="px-2 py-0.5 text-xs font-medium text-gray-500">
                       Folders
                     </div>
-                    <ul className="space-y-0.5">
+                    <ul className="space-y-0">
                       {getCustomFolders().map((folder) => (
                         <li key={folder.id}>
                           <Link 
                             href={`/mail/${folder.name?.toLowerCase()}?accountId=${selectedAccountId}`}
-                            className="flex items-center px-2 py-1.5 text-xs rounded-md hover:bg-gray-200"
+                            className="flex items-center px-2 py-1 text-xs rounded-md hover:bg-gray-200"
                             onClick={() => folder.name && handleFolderSelect(folder.name)}
                           >
                             <FolderIcon className="h-3.5 w-3.5 mr-2 text-gray-600" />
-                            <span className="truncate">{folder.name}</span>
+                            <span className="truncate">
+                              {folder.name?.startsWith('INBOX.') 
+                                ? folder.name.substring(6) // Remove 'INBOX.' prefix (6 characters)
+                                : folder.name}
+                            </span>
                             {(() => {
                               return folder.count && folder.count > 0 ? (
                                 <span className="ml-auto bg-gray-200 text-gray-700 text-xs rounded-full px-1.5 py-0.5">
