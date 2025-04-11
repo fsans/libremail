@@ -55,7 +55,7 @@ import { getDb } from '@/lib/db/client';
 import { attachments } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { Attachment } from '@/lib/types';
+//import { Attachment } from '@/lib/types';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

@@ -9,18 +9,18 @@ import {
   Send, 
   FileText as File, 
   Trash2, 
-  Settings, 
-  User, 
-  Plus,
+  //Settings, 
+  //User, 
+  //Plus,
   Menu,
-  Archive,
+  Archive,  
   AlertCircle,
   FolderIcon
 } from 'lucide-react';
 import { AccountSwitcher } from '@/components/mail/account-switcher';
 import { UnifiedToolbar } from '@/components/mail/unified-toolbar';
 import { useFolders } from '@/lib/hooks/use-api-queries';
-import type { Folder } from '@/lib/db/schema';
+//import type { Folder } from '@/lib/db/schema';
 
 interface MailLayoutProps {
   children: ReactNode;
@@ -100,7 +100,11 @@ export default function MailLayout({ children }: MailLayoutProps) {
       
       try {
         // Method 1: Direct FileMaker object detection (most reliable)
-        if (typeof (window as any).FileMaker === 'object') {
+        interface WindowWithFileMaker extends Window {
+          FileMaker?: object;
+        }
+        
+        if (typeof (window as WindowWithFileMaker).FileMaker === 'object') {
           console.info("FileMaker Context detected via FileMaker object");
           return true;
         }
@@ -197,7 +201,7 @@ export default function MailLayout({ children }: MailLayoutProps) {
         window.removeEventListener('resize', preventMobileLayout);
       };
     }
-  }, []);
+  }, [isFileMakerWebViewer]);
 
   // Add a useEffect to monitor URL changes and update toolbar state
   useEffect(() => {

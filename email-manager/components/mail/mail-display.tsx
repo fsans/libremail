@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { parseEmailAddresses } from '@/lib/utils/email-parser';
 import { formatEmailDate } from '@/lib/utils/date-formatter';
-import type { Message, Attachment } from '@/lib/db/schema';
+import type { Message } from '@/lib/db/schema';
+//import type { Attachment } from '@/lib/db/schema';
 import { ChevronDown, ChevronUp, Paperclip } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback } from '@/components/ui/avatar';
@@ -36,8 +37,7 @@ export function MailDisplay({ message }: MailDisplayProps) {
   
   // Use TanStack Query hook for attachments - directly use the result without local state
   const { 
-    data: attachments = [], 
-    isLoading: loading 
+    data: attachments = []
   } = useAttachments(message.id);
   
   // Mark message as read if not already

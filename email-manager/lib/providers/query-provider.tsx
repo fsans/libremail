@@ -75,14 +75,17 @@ export function QueryProvider({ children }: QueryProviderProps) {
       const originalPushState = window.history.pushState;
       const originalReplaceState = window.history.replaceState;
       
-      window.history.pushState = function() {
+      // Define the proper types for History API methods
+      type HistoryStateParams = [state: unknown, title: string, url?: string | URL | null];
+      
+      window.history.pushState = function(...args: HistoryStateParams) {
         handleRouteChangeStart();
-        return originalPushState.apply(this, arguments as any);
+        return originalPushState.apply(this, args);
       };
       
-      window.history.replaceState = function() {
+      window.history.replaceState = function(...args: HistoryStateParams) {
         handleRouteChangeStart();
-        return originalReplaceState.apply(this, arguments as any);
+        return originalReplaceState.apply(this, args);
       };
       
       // Also handle popstate events (back/forward navigation)

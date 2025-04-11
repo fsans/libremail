@@ -17,7 +17,7 @@ import {
   Filter,
   MessageSquare,
   PenSquare,
-  MoreHorizontal,
+  //MoreHorizontal,
   ChevronLeft
 } from 'lucide-react';
 import { useMailContext } from '@/app/mail/layout';
@@ -103,9 +103,67 @@ export function UnifiedToolbar({
     
     setIsSearching(true);
     
-    // Redirect to search results page
-    router.push(`/mail/search?q=${encodeURIComponent(searchQuery)}&folder=${currentFolder}`);
+    // Redirect to the current folder with search query parameter
+    router.push(`/mail/${currentFolder}?q=${encodeURIComponent(searchQuery)}&accountId=${selectedAccountId}`);
   };
+
+  // Clear search and return to normal folder view
+  const handleClearSearch = () => {
+    // Get the current URL to extract the actual folder path
+    const url = new URL(window.location.href);
+    const pathParts = url.pathname.split('/');
+    
+    // The folder should be the third part of the path: /mail/[folder]
+    // If we can't determine it, default to inbox
+    let targetFolder = pathParts.length >= 3 ? pathParts[2] : 'inbox';
+    
+    // If the folder contains special characters (like in "Search: term"), use inbox
+    if (targetFolder.includes(':') || targetFolder.includes(' ')) {
+      targetFolder = 'inbox';
+    }
+    
+    setSearchQuery('');
+    setIsSearching(false);
+    
+    // Redirect to the appropriate folder without search query parameter
+    router.push(`/mail/${targetFolder}?accountId=${selectedAccountId}`);
+  };
+
+  // Sync search state with URL
+  useEffect(() => {
+    // Need to run this effect on component mount and when URL changes
+    const syncSearchStateWithUrl = () => {
+      try {
+        // Check if the URL has a search query parameter
+        const url = new URL(window.location.href);
+        const hasSearchParam = url.searchParams.has('q');
+        
+        // Update isSearching state based on URL
+        setIsSearching(hasSearchParam);
+        
+        // If there's a search parameter in the URL, update the search query state
+        if (hasSearchParam) {
+          const queryParam = url.searchParams.get('q');
+          if (queryParam) {
+            setSearchQuery(queryParam);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing URL:', error);
+      }
+    };
+    
+    // Run on mount and when router changes
+    syncSearchStateWithUrl();
+    
+    // Listen for URL changes (for browser back/forward navigation)
+    window.addEventListener('popstate', syncSearchStateWithUrl);
+    
+    // Clean up listener on unmount
+    return () => {
+      window.removeEventListener('popstate', syncSearchStateWithUrl);
+    };
+  }, []);
 
   // Handle refresh button click
   const handleRefresh = async () => {
@@ -356,20 +414,32 @@ export function UnifiedToolbar({
       
       {/* Right section - Search */}
       <div className="relative w-full max-w-md">
-        <form onSubmit={handleSearch}>
-          <input
-            type="text"
-            placeholder="Search emails..."
-            className="w-full pl-8 pr-3 py-1 text-xs border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button 
-            type="submit"
-            className="absolute left-2.5 top-1.5 text-gray-400 dark:text-gray-500"
-          >
-            <Search className="h-3.5 w-3.5" />
-          </button>
+        <form onSubmit={handleSearch} className="flex-1 max-w-md mx-4">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search emails..."
+              className={`w-full pl-8 ${isSearching ? 'pr-8' : 'pr-4'} py-1 text-sm border rounded-md 
+                         ${isSearching ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700'} 
+                         focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100`}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {isSearching && (
+              <button 
+                type="button"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400"
+                title="Clear Search"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

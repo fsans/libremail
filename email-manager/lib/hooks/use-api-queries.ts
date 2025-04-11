@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, QueryClient } from '@tanstack/react-query';
 import type { Account, Folder, Message, Attachment } from '@/lib/db/schema';
 
 // Module-level cache for accounts and folders
@@ -12,7 +12,7 @@ const CACHE = {
 
 // Fetch accounts with module-level caching
 export function useAccounts() {
-  const queryClient = useQueryClient();
+  //const queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['accounts'],
@@ -60,9 +60,7 @@ export function useAccounts() {
 }
 
 // Manual refresh function for accounts
-export function refreshAccounts() {
-  const queryClient = useQueryClient();
-  
+export function refreshAccounts(queryClient: QueryClient) {
   console.log('Manually refreshing accounts data');
   CACHE.accounts = null;
   CACHE.accountsPromise = null;
@@ -73,7 +71,7 @@ export function refreshAccounts() {
 
 // Fetch folders for an account with module-level caching
 export function useFolders(accountId: number) {
-  const queryClient = useQueryClient();
+  //const queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['folders', accountId],
@@ -122,9 +120,7 @@ export function useFolders(accountId: number) {
 }
 
 // Manual refresh function for folders
-export function refreshFolders(accountId: number) {
-  const queryClient = useQueryClient();
-  
+export function refreshFolders(accountId: number, queryClient: QueryClient) {
   console.log(`Manually refreshing folders data for account ${accountId}`);
   delete CACHE.folders[accountId];
   delete CACHE.foldersPromises[accountId];
@@ -251,5 +247,25 @@ export function useAttachment(attachmentId: number) {
     },
     enabled: !!attachmentId, // Only run if attachmentId is provided
     staleTime: 24 * 60 * 60 * 1000, // 24 hours - attachments don't change once created
+  });
+}
+
+// Search emails with a query string
+export function useSearchEmails(accountId: number, query: string | null) {
+  return useQuery({
+    queryKey: ['search', accountId, query],
+    queryFn: async () => {
+      if (!query || !accountId) {
+        return [];
+      }
+      
+      const response = await fetch(`/api/emails?accountId=${accountId}&query=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Failed to search emails');
+      }
+      return response.json();
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!query && !!accountId, // Only run the query if we have a search query and account ID
   });
 }

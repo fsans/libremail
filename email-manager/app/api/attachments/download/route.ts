@@ -22,7 +22,7 @@ import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { Attachment } from '@/lib/types';
+//import { Attachment } from '@/lib/types';
 
 // Configure the base path for attachment storage
 const ATTACHMENTS_BASE_PATH = process.env.ATTACHMENTS_PATH || '../sync/attachments';

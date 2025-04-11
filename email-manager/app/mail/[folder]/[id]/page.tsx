@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { MailDisplay } from '@/components/mail/mail-display';
 import { useEmail } from '@/lib/hooks/use-api-queries';
-import type { Message } from '@/lib/db/schema';
 import { useMailContext } from '@/app/mail/layout';
 
 export default function MessagePage() {
@@ -69,7 +68,7 @@ export default function MessagePage() {
         <div className="text-center">
           <div className="text-2xl font-semibold mb-2">Message not found</div>
           <div className="text-gray-500">
-            The message you're looking for doesn't exist or was deleted
+            The message you&apos;re looking for doesn&apos;t exist or was deleted
           </div>
         </div>
       </div>

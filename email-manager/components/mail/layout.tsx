@@ -10,8 +10,8 @@ import {
   File, 
   Trash2, 
   Settings, 
-  User, 
-  Plus,
+  //User, 
+  //Plus,
   Menu,
   Archive,
   AlertCircle

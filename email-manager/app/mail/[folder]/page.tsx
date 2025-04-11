@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { MailList } from '@/components/mail/mail-list';
-import { useFolders, useMultipleFolderEmails } from '@/lib/hooks/use-api-queries';
-import type { Message, Folder } from '@/lib/db/schema';
+import { useFolders, useMultipleFolderEmails, useSearchEmails } from '@/lib/hooks/use-api-queries';
+import type { Folder, Message } from '@/lib/db/schema';
 
 export default function FolderPage() {
   const params = useParams();
@@ -15,8 +15,11 @@ export default function FolderPage() {
   const accountIdParam = searchParams.get('accountId');
   const accountId = accountIdParam ? Number(accountIdParam) : 1;
   
+  // Get search query if present
+  const searchQuery = searchParams.get('q');
+  const isSearchMode = !!searchQuery;
+  
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
-  const [relatedFolders, setRelatedFolders] = useState<Folder[]>([]);
   const [folderIds, setFolderIds] = useState<number[]>([]);
   
   // Standard mailbox names (case insensitive)
@@ -31,16 +34,29 @@ export default function FolderPage() {
     isLoading: foldersLoading 
   } = useFolders(accountId);
   
-  // Use React Query to fetch emails from multiple folders
+  // Use React Query to fetch emails from multiple folders (when not searching)
   const { 
-    data: messages = [], 
-    isLoading: messagesLoading 
+    data: folderMessages = [], 
+    isLoading: folderMessagesLoading 
   } = useMultipleFolderEmails(folderIds, accountId);
+  
+  // Use React Query to search emails (when searching)
+  const {
+    data: searchResults = [],
+    isLoading: searchLoading
+  } = useSearchEmails(accountId, searchQuery);
+  
+  // Determine which messages to display based on whether we're searching or not
+  const messages = isSearchMode ? searchResults : folderMessages;
+  const messagesLoading = isSearchMode ? searchLoading : folderMessagesLoading;
   
   // Find related folders when folders data is available
   useEffect(() => {
+    // Skip if we don't have folders data yet
     if (!folders.length) return;
     
+    // Always set up the folder IDs regardless of search mode
+    // This ensures we have folder data ready when search is cleared
     if (isStandardMailbox) {
       // For standard mailboxes, find all related folders
       // For example, for "Sent" find both "Sent" and "INBOX.Sent"
@@ -62,8 +78,6 @@ export default function FolderPage() {
         return false;
       });
       
-      setRelatedFolders(related);
-      
       // Set the primary folder for display purposes
       const primaryFolder = related.find((f: Folder) => 
         f.name?.toLowerCase() === folderName.toLowerCase()
@@ -83,20 +97,42 @@ export default function FolderPage() {
       
       if (folder) {
         setCurrentFolder(folder);
-        setRelatedFolders([folder]);
         setFolderIds([folder.id]);
       }
     }
-  }, [folders, folderName, isStandardMailbox]);
+  }, [folders, folderName, isStandardMailbox, isSearchMode]);
   
-  const loading = foldersLoading || messagesLoading || !currentFolder;
+  // Determine loading state based on different conditions
+  const loading = foldersLoading || 
+                 (isSearchMode ? searchLoading : folderMessagesLoading) || 
+                 // Only show loading if we're not in search mode, don't have a folder, 
+                 // and we've already loaded the folders list (to prevent infinite loading)
+                 (!isSearchMode && !currentFolder && folders.length > 0);
   
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl font-semibold mb-2">Loading...</div>
-          <div className="text-gray-500">Fetching your emails</div>
+          <div className="text-gray-500">
+            {isSearchMode 
+              ? `Searching for "${searchQuery}"...` 
+              : 'Fetching your emails'}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // For search results with no matches
+  if (isSearchMode && messages.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl font-semibold mb-2">No results found</div>
+          <div className="text-gray-500">
+            No emails matching "{searchQuery}" were found
+          </div>
         </div>
       </div>
     );
@@ -104,9 +140,20 @@ export default function FolderPage() {
   
   return (
     <div className="h-full">
+      {isSearchMode && (
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <h2 className="text-lg font-semibold">
+            Search Results: "{searchQuery}"
+          </h2>
+          <p className="text-sm text-gray-500">
+            {messages.length} {messages.length === 1 ? 'result' : 'results'} found
+          </p>
+        </div>
+      )}
+      
       <MailList 
         messages={messages} 
-        currentFolder={folderName} 
+        currentFolder={isSearchMode ? `Search: ${searchQuery}` : folderName} 
       />
     </div>
   );
