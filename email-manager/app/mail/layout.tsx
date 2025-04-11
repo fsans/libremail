@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { AccountSwitcher } from '@/components/mail/account-switcher';
 import { UnifiedToolbar } from '@/components/mail/unified-toolbar';
+import { useFolders } from '@/lib/hooks/use-api-queries';
 import type { Folder } from '@/lib/db/schema';
 
 interface MailLayoutProps {
@@ -49,12 +50,17 @@ export function useMailContext() {
 
 export default function MailLayout({ children }: MailLayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isFileMakerWebViewer, setIsFileMakerWebViewer] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(1); // Default to account ID 1
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
   const [currentFolder, setCurrentFolder] = useState<string>('inbox');
   const router = useRouter();
+
+  // Use React Query hook instead of manual fetch
+  const { 
+    data: folders = [], 
+    isLoading: loading 
+  } = useFolders(selectedAccountId);
 
   // Helper functions for folder categorization
   const getStandardFolders = () => {
@@ -87,31 +93,111 @@ export default function MailLayout({ children }: MailLayoutProps) {
     return null;
   };
 
-  // Load folders when account changes
+  // Detect if running in FileMaker WebViewer with multiple detection methods
   useEffect(() => {
-    async function loadFolders() {
+    function checkFileMakerContext() {
+      if (typeof window === 'undefined') return false;
+      
       try {
-        const response = await fetch(`/api/folders?accountId=${selectedAccountId}`);
-        const data = await response.json();
-        setFolders(data);
-      } catch (error) {
-        console.error('Error loading folders:', error);
-      } finally {
-        setLoading(false);
+        // Method 1: Direct FileMaker object detection (most reliable)
+        if (typeof (window as any).FileMaker === 'object') {
+          console.info("FileMaker Context detected via FileMaker object");
+          return true;
+        }
+        
+        // Method 2: Check for FileMaker in user agent (some versions)
+        if (window.navigator.userAgent.includes('FileMaker')) {
+          console.info("FileMaker Context detected via user agent");
+          return true;
+        }
+        
+        // Method 3: Force detection for testing (remove in production)
+        // Uncomment the next line to force FileMaker mode for testing
+        // return true;
+        
+        return false;
+      } catch (e) {
+        console.error("Error checking FileMaker context:", e);
+        return false;
       }
     }
     
-    loadFolders();
-  }, [selectedAccountId]);
-
-  useEffect(() => {
-    console.log('MailLayout selectedMessageId changed:', selectedMessageId);
-    console.log('MailLayout selectedMessageId type:', typeof selectedMessageId);
-  }, [selectedMessageId]);
-
-  useEffect(() => {
-    console.log(selectedMessageId);
-  }, [selectedMessageId]);
+    const isInFileMaker = checkFileMakerContext();
+    console.log("FileMaker detection result:", isInFileMaker);
+    setIsFileMakerWebViewer(isInFileMaker);
+    
+    if (isInFileMaker) {
+      // Force mobile sidebar to be open always
+      setIsMobileSidebarOpen(true);
+      
+      // Add class to body and html for CSS targeting
+      document.documentElement.classList.add('filemaker-webviewer');
+      document.body.classList.add('filemaker-webviewer');
+      
+      // Add specific CSS overrides for FileMaker WebViewer
+      const styleElement = document.createElement('style');
+      styleElement.textContent = `
+        /* FileMaker WebViewer specific overrides - !important flags ensure these take precedence */
+        html.filemaker-webviewer,
+        body.filemaker-webviewer {
+          overflow: hidden !important;
+          height: 100% !important;
+          width: 100% !important;
+        }
+        
+        /* Force sidebar to be visible and positioned correctly */
+        .filemaker-webviewer .sidebar {
+          transform: none !important;
+          display: block !important;
+          position: relative !important;
+          left: 0 !important;
+          width: 256px !important;
+          z-index: 40 !important;
+        }
+        
+        /* Hide mobile toggle in FileMaker */
+        .filemaker-webviewer .mobile-toggle {
+          display: none !important;
+        }
+        
+        /* Ensure content area adjusts properly */
+        .filemaker-webviewer .content-area {
+          margin-left: 0 !important;
+          width: calc(100% - 256px) !important;
+          flex: 1 !important;
+        }
+        
+        /* Override any media queries */
+        @media (max-width: 768px) {
+          .filemaker-webviewer .sidebar {
+            transform: none !important;
+            display: block !important;
+            position: relative !important;
+            width: 256px !important;
+          }
+          
+          .filemaker-webviewer .content-area {
+            margin-left: 0 !important;
+            width: calc(100% - 256px) !important;
+          }
+        }
+      `;
+      document.head.appendChild(styleElement);
+      
+      // Prevent any resize events from changing the layout
+      const preventMobileLayout = () => {
+        if (isFileMakerWebViewer) {
+          setIsMobileSidebarOpen(true);
+        }
+      };
+      
+      window.addEventListener('resize', preventMobileLayout);
+      
+      return () => {
+        window.removeEventListener('resize', preventMobileLayout);
+      };
+    }
+  }, []);
 
   // Add a useEffect to monitor URL changes and update toolbar state
   useEffect(() => {
@@ -123,7 +209,6 @@ export default function MailLayout({ children }: MailLayoutProps) {
         
         if (!isMessageView) {
           // If we're not in a message view, ensure selectedMessageId is null
-          console.log('Route changed to non-message view, resetting selectedMessageId');
           setSelectedMessageId(null);
         }
       }
@@ -155,44 +240,37 @@ export default function MailLayout({ children }: MailLayoutProps) {
 
   // Handle message selection
   const handleMessageSelect = (id: number | null) => {
-    console.log('handleMessageSelect called with:', id);
-    console.log('handleMessageSelect id type:', typeof id);
+    // If id is null, just set it directly
+    if (id === null) {
+      setSelectedMessageId(null);
+      return;
+    }
     
-    // Ensure proper type conversion
-    const numericId = id !== null ? Number(id) : null;
-    console.log('handleMessageSelect converted id:', numericId);
-    
-    setSelectedMessageId(numericId);
+    // Set the selected message ID (already a number)
+    setSelectedMessageId(id);
   };
 
   // Handle folder selection
   const handleFolderSelect = (folderName: string) => {
-    console.log('handleFolderSelect called with:', folderName);
+    setCurrentFolder(folderName);
     
-    // Only update if the folder actually changed
-    if (currentFolder !== folderName) {
-      setCurrentFolder(folderName);
+    // Check if we're in a message view
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const isMessageView = /\/mail\/[^\/]+\/\d+$/.test(path);
       
-      // Only reset selected message when explicitly changing folders
-      // Check if we're not in a message view
-      if (typeof window !== 'undefined') {
-        const path = window.location.pathname;
-        const isMessageView = /\/mail\/[^\/]+\/\d+$/.test(path);
-        
-        if (!isMessageView) {
-          console.log('Resetting selectedMessageId in handleFolderSelect - not in message view');
-          setSelectedMessageId(null);
-        } else {
-          console.log('Not resetting selectedMessageId in handleFolderSelect - in message view');
-        }
+      if (!isMessageView) {
+        // If we're not in a message view, reset the selected message ID
+        setSelectedMessageId(null);
       }
     }
   };
 
   // Handle refresh
-  const handleRefresh = async () => {
-    // Implement refresh logic here
-    console.log('Refreshing...');
+  const handleRefresh = async (): Promise<void> => {
+    // Force a refresh of the current page
+    router.refresh();
+    // Return a resolved promise
     return Promise.resolve();
   };
 
@@ -204,18 +282,19 @@ export default function MailLayout({ children }: MailLayoutProps) {
       currentFolder,
       setCurrentFolder: handleFolderSelect,
     }}>
-      <div className="flex h-screen overflow-hidden bg-white dark:bg-gray-950">
-        {/* Mobile sidebar toggle */}
+      <div className={`flex h-screen overflow-hidden bg-white dark:bg-gray-950 ${isFileMakerWebViewer ? 'filemaker-layout' : ''}`}>
+        {/* Mobile sidebar toggle - hide in FileMaker WebViewer */}
         <button
-          className="absolute top-4 left-4 z-50 md:hidden text-gray-700 dark:text-gray-300"
+          className={`absolute top-4 left-4 z-50 md:hidden ${isFileMakerWebViewer ? 'hidden' : ''} text-gray-700 dark:text-gray-300`}
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         >
           <Menu className="h-6 w-6" />
         </button>
 
-        {/* Sidebar */}
+        {/* Sidebar - force visible and relative positioning in FileMaker WebViewer */}
         <div className={`
           ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          ${isFileMakerWebViewer ? '!translate-x-0 !relative !block' : ''}
           md:translate-x-0 transition-transform duration-200 ease-in-out
           w-64 border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex flex-col h-full md:relative absolute z-40
         `}>

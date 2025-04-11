@@ -42,14 +42,8 @@ export function UnifiedToolbar({
   const [accountName, setAccountName] = useState('Account');
   const [messageCount, setMessageCount] = useState(0);
 
-  // Debug the selectedMessageId value
-  console.log('UnifiedToolbar selectedMessageId:', selectedMessageId);
-  console.log('UnifiedToolbar selectedMessageId type:', typeof selectedMessageId);
-  console.log('Condition result:', selectedMessageId !== null && selectedMessageId !== undefined);
-  
   // Add useEffect to log when the component renders with different selectedMessageId values
   useEffect(() => {
-    console.log('UnifiedToolbar useEffect - selectedMessageId:', selectedMessageId);
   }, [selectedMessageId]);
 
   // Fetch account information

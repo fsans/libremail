@@ -62,7 +62,6 @@ export function MailList({ messages, currentFolder }: MailListProps) {
                       </span>
                     </div>
                     <div className="text-[10px] truncate pl-3">{message.subject}</div>
-                    <div className="text-[10px] text-gray-500 truncate mt-0.5 pl-5">{message.snippet || ''}</div>
                   </Link>
                 </li>
               );

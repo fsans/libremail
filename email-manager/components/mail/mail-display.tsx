@@ -5,6 +5,7 @@ import type { Message, Attachment } from '@/lib/db/schema';
 import { ChevronDown, ChevronUp, Paperclip } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { AvatarFallback } from '@/components/ui/avatar';
+import { useAttachments } from '@/lib/hooks/use-api-queries';
 
 interface MailDisplayProps {
   message: Message;
@@ -12,8 +13,6 @@ interface MailDisplayProps {
 
 export function MailDisplay({ message }: MailDisplayProps) {
   const [showDetails, setShowDetails] = useState(false);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [loading, setLoading] = useState(false);
   
   // Parse email addresses
   const fromAddresses = parseEmailAddresses(message.from || '');
@@ -35,28 +34,11 @@ export function MailDisplay({ message }: MailDisplayProps) {
   
   const senderInitials = getInitials(senderName);
   
-  // Load attachments
-  useEffect(() => {
-    async function loadAttachments() {
-      if (!message.id) return;
-      
-      setLoading(true);
-      try {
-        const response = await fetch(`/api/attachments?messageId=${message.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to load attachments');
-        }
-        const data = await response.json();
-        setAttachments(data);
-      } catch (error) {
-        console.error('Error loading attachments:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    loadAttachments();
-  }, [message.id]);
+  // Use TanStack Query hook for attachments - directly use the result without local state
+  const { 
+    data: attachments = [], 
+    isLoading: loading 
+  } = useAttachments(message.id);
   
   // Mark message as read if not already
   useEffect(() => {

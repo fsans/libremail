@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, User } from 'lucide-react';
 import type { Account } from '@/lib/db/schema';
+import { useAccounts } from '@/lib/hooks/use-api-queries';
 
 interface AccountSwitcherProps {
   selectedAccountId: number;
@@ -10,41 +11,43 @@ interface AccountSwitcherProps {
 }
 
 export function AccountSwitcher({ selectedAccountId, onAccountChange }: AccountSwitcherProps) {
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  
+  // Use the React Query hook instead of direct fetch
+  const { data: accounts = [], isLoading } = useAccounts();
 
   useEffect(() => {
-    async function loadAccounts() {
-      try {
-        const response = await fetch('/api/accounts');
-        const data = await response.json();
-        
-        // Ensure data is an array before using array methods
-        const accountsArray = Array.isArray(data) ? data : [];
-        setAccounts(accountsArray);
-        
-        // Set the selected account
-        const account = accountsArray.find((a: Account) => a.id === selectedAccountId);
-        if (account) {
-          setSelectedAccount(account);
-        } else if (accountsArray.length > 0) {
-          setSelectedAccount(accountsArray[0]);
-          onAccountChange(accountsArray[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading accounts:', error);
+    // Set the selected account whenever accounts or selectedAccountId changes
+    if (accounts.length > 0) {
+      const account = accounts.find((a: Account) => a.id === selectedAccountId);
+      if (account) {
+        setSelectedAccount(account);
+      } else if (accounts.length > 0) {
+        setSelectedAccount(accounts[0]);
+        onAccountChange(accounts[0].id);
       }
     }
-    
-    loadAccounts();
-  }, [selectedAccountId, onAccountChange]);
+  }, [accounts, selectedAccountId, onAccountChange]);
 
   const handleAccountSelect = (account: Account) => {
     setSelectedAccount(account);
     onAccountChange(account.id);
     setIsOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center p-2">
+        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+          <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+        </div>
+        <div className="ml-2">
+          Loading accounts...
+        </div>
+      </div>
+    );
+  }
 
   if (!selectedAccount) {
     return (

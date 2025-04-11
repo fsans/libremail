@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { MailList } from '@/components/mail/mail-list';
+import { useFolders, useMultipleFolderEmails } from '@/lib/hooks/use-api-queries';
 import type { Message, Folder } from '@/lib/db/schema';
 
 export default function FolderPage() {
@@ -14,10 +15,9 @@ export default function FolderPage() {
   const accountIdParam = searchParams.get('accountId');
   const accountId = accountIdParam ? Number(accountIdParam) : 1;
   
-  const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
   const [relatedFolders, setRelatedFolders] = useState<Folder[]>([]);
+  const [folderIds, setFolderIds] = useState<number[]>([]);
   
   // Standard mailbox names (case insensitive)
   const standardMailboxes = ['inbox', 'drafts', 'sent', 'junk', 'spam', 'trash', 'bin', 'archive'];
@@ -25,93 +25,71 @@ export default function FolderPage() {
   // Check if the current folder is a standard mailbox
   const isStandardMailbox = standardMailboxes.includes(folderName.toLowerCase());
   
-  useEffect(() => {
-    async function loadFolders() {
-      try {
-        const response = await fetch(`/api/folders?accountId=${accountId}`);
-        const data = await response.json();
-        
-        if (isStandardMailbox) {
-          // For standard mailboxes, find all related folders
-          // For example, for "Sent" find both "Sent" and "INBOX.Sent"
-          const related = data.filter((f: Folder) => {
-            const name = f.name?.toLowerCase() || '';
-            
-            // Direct match (e.g., "sent" matches "Sent")
-            if (name === folderName.toLowerCase()) return true;
-            
-            // INBOX prefix match (e.g., "inbox.sent" matches "Sent")
-            if (name.startsWith('inbox.') && name.substring(6) === folderName.toLowerCase()) return true;
-            
-            // Special cases for alternative names
-            if (folderName.toLowerCase() === 'junk' && name === 'spam') return true;
-            if (folderName.toLowerCase() === 'junk' && name === 'inbox.spam') return true;
-            if (folderName.toLowerCase() === 'trash' && name === 'bin') return true;
-            if (folderName.toLowerCase() === 'trash' && name === 'inbox.bin') return true;
-            
-            return false;
-          });
-          
-          setRelatedFolders(related);
-          
-          // Set the primary folder for display purposes
-          const primaryFolder = related.find((f: Folder) => 
-            f.name?.toLowerCase() === folderName.toLowerCase()
-          ) || related[0];
-          
-          if (primaryFolder) {
-            setCurrentFolder(primaryFolder);
-          }
-        } else {
-          // For custom folders, just find the exact match
-          const folder = data.find((f: Folder) => 
-            f.name?.toLowerCase() === folderName.toLowerCase()
-          );
-          
-          if (folder) {
-            setCurrentFolder(folder);
-            setRelatedFolders([folder]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading folders:', error);
-      }
-    }
-    
-    loadFolders();
-  }, [accountId, folderName, isStandardMailbox]);
+  // Use React Query to fetch folders
+  const { 
+    data: folders = [], 
+    isLoading: foldersLoading 
+  } = useFolders(accountId);
   
+  // Use React Query to fetch emails from multiple folders
+  const { 
+    data: messages = [], 
+    isLoading: messagesLoading 
+  } = useMultipleFolderEmails(folderIds, accountId);
+  
+  // Find related folders when folders data is available
   useEffect(() => {
-    async function loadMessages() {
-      if (relatedFolders.length === 0) return;
+    if (!folders.length) return;
+    
+    if (isStandardMailbox) {
+      // For standard mailboxes, find all related folders
+      // For example, for "Sent" find both "Sent" and "INBOX.Sent"
+      const related = folders.filter((f: Folder) => {
+        const name = f.name?.toLowerCase() || '';
+        
+        // Direct match (e.g., "sent" matches "Sent")
+        if (name === folderName.toLowerCase()) return true;
+        
+        // INBOX prefix match (e.g., "inbox.sent" matches "Sent")
+        if (name.startsWith('inbox.') && name.substring(6) === folderName.toLowerCase()) return true;
+        
+        // Special cases for alternative names
+        if (folderName.toLowerCase() === 'junk' && name === 'spam') return true;
+        if (folderName.toLowerCase() === 'junk' && name === 'inbox.spam') return true;
+        if (folderName.toLowerCase() === 'trash' && name === 'bin') return true;
+        if (folderName.toLowerCase() === 'trash' && name === 'inbox.bin') return true;
+        
+        return false;
+      });
       
-      setLoading(true);
-      try {
-        // For standard mailboxes, fetch messages from all related folders
-        const allMessages: Message[] = [];
-        
-        // Fetch messages from each related folder
-        for (const folder of relatedFolders) {
-          const response = await fetch(`/api/emails?folderId=${folder.id}&accountId=${accountId}`);
-          const data = await response.json();
-          allMessages.push(...data);
-        }
-        
-        // Sort all messages by date (newest first)
-        allMessages.sort((a: Message, b: Message) => {
-          return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime();
-        });
-        
-        setMessages(allMessages);
-      } catch (error) {
-        console.error('Error loading messages:', error);
-      } finally {
-        setLoading(false);
+      setRelatedFolders(related);
+      
+      // Set the primary folder for display purposes
+      const primaryFolder = related.find((f: Folder) => 
+        f.name?.toLowerCase() === folderName.toLowerCase()
+      ) || related[0];
+      
+      if (primaryFolder) {
+        setCurrentFolder(primaryFolder);
+      }
+      
+      // Extract folder IDs for email fetching
+      setFolderIds(related.map(f => f.id));
+    } else {
+      // For custom folders, just find the exact match
+      const folder = folders.find((f: Folder) => 
+        f.name?.toLowerCase() === folderName.toLowerCase()
+      );
+      
+      if (folder) {
+        setCurrentFolder(folder);
+        setRelatedFolders([folder]);
+        setFolderIds([folder.id]);
       }
     }
-    
-    loadMessages();
-  }, [relatedFolders, accountId]);
+  }, [folders, folderName, isStandardMailbox]);
+  
+  const loading = foldersLoading || messagesLoading || !currentFolder;
   
   if (loading) {
     return (
